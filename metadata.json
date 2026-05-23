@@ -1,0 +1,6 @@
+{
+  "name": "Map Art Generator",
+  "description": "Convert images into 128x128 Minecraft carpet map art blueprints with block counts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
