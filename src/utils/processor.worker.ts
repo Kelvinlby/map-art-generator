@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { CARPET_PALETTE } from './colors';
+import { CARPET_PALETTE, MATERIAL_FILTERS } from './colors';
 import { ProcessSettings } from '../types';
 
 function rgb2lab(r: number, g: number, b: number): [number, number, number] {
@@ -52,6 +52,10 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
   currentJobId = msg.jobId;
   const { jobId, width, height, pixels, settings } = msg;
   const data = new Uint8ClampedArray(pixels);
+
+  const filter = MATERIAL_FILTERS.find(f => f.value === settings.materials) ?? MATERIAL_FILTERS[0];
+  const filtered = PALETTE_WITH_LAB.filter(c => filter.predicate(c.item));
+  const activePalette = filtered.length > 0 ? filtered : PALETTE_WITH_LAB;
 
   const tempScale = (settings.temperature || 0) / 100;
   const rTemp = tempScale > 0 ? tempScale * 40 : 0;
@@ -121,7 +125,7 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
   if (jobId !== currentJobId) return;
 
   const materials: Record<string, number> = {};
-  PALETTE_WITH_LAB.forEach(c => (materials[c.id] = 0));
+  activePalette.forEach(c => (materials[c.item] = 0));
   const blocks: string[] = new Array(width * height);
 
   const useLab = settings.colorMetric !== 'rgb';
@@ -130,8 +134,8 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
     let minDist = Infinity;
     let bestIdx = 0;
     let labCache: [number, number, number] | null = null;
-    for (let i = 0; i < PALETTE_WITH_LAB.length; i++) {
-      const color = PALETTE_WITH_LAB[i];
+    for (let i = 0; i < activePalette.length; i++) {
+      const color = activePalette[i];
       let dist;
       if (!useLab) {
         const dr = r - color.base[0], dg = g - color.base[1], db = b - color.base[2];
@@ -145,7 +149,7 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
       }
       if (dist < minDist) { minDist = dist; bestIdx = i; }
     }
-    return PALETTE_WITH_LAB[bestIdx];
+    return activePalette[bestIdx];
   };
 
   const distributeError = (x: number, y: number, errR: number, errG: number, errB: number, factor: number) => {
@@ -163,8 +167,8 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
     for (let i = 0; i < data.length; i += 4) {
       const closest = getClosestColor(data[i], data[i + 1], data[i + 2]);
       data[i] = closest.base[0]; data[i + 1] = closest.base[1]; data[i + 2] = closest.base[2];
-      materials[closest.id]++;
-      blocks[i / 4] = closest.id;
+      materials[closest.item]++;
+      blocks[i / 4] = closest.item;
     }
   } else {
     for (let y = 0; y < height; y++) {
@@ -174,8 +178,8 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
         const r = data[i], g = data[i + 1], b = data[i + 2];
         const closest = getClosestColor(r, g, b);
         data[i] = closest.base[0]; data[i + 1] = closest.base[1]; data[i + 2] = closest.base[2];
-        materials[closest.id]++;
-        blocks[y * width + x] = closest.id;
+        materials[closest.item]++;
+        blocks[y * width + x] = closest.item;
 
         const errR = r - closest.base[0];
         const errG = g - closest.base[1];

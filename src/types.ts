@@ -1,15 +1,18 @@
 export interface BlockColor {
-  id: string;
   name: string;
+  item: string; // full Minecraft item ID, e.g. "minecraft:red_carpet"
   base: [number, number, number]; // RGB
   hex: string;
 }
 
 export interface CarpetColor extends BlockColor {}
 
+import type { MaterialFilterValue } from './utils/colors';
+
 export interface ProcessSettings {
   gridX: number;
   gridY: number;
+  materials: MaterialFilterValue;
   dithering: 'none' | 'floyd-steinberg' | 'atkinson';
   colorMetric: 'rgb' | 'cielab';
   saturation: number;

@@ -12,7 +12,7 @@ export function MaterialsList({ materials }: Props) {
   const requirements = CARPET_PALETTE
     .map(color => ({
       color,
-      count: materials[color.id] || 0
+      count: materials[color.item] || 0
     }))
     .filter(req => req.count > 0)
     .sort((a, b) => b.count - a.count);
@@ -38,7 +38,7 @@ export function MaterialsList({ materials }: Props) {
           const remainder = req.count % 64;
 
           return (
-            <div key={req.color.id} className="flex items-center p-3 bg-slate-950/50 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
+            <div key={req.color.item} className="flex items-center p-3 bg-slate-950/50 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
               <div 
                 className="w-10 h-10 rounded-md shrink-0 shadow-sm border border-black/20"
                 style={{ backgroundColor: req.color.hex }}

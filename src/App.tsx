@@ -3,6 +3,7 @@ import { UploadArea } from './components/UploadArea';
 import { MapPreview } from './components/MapPreview';
 import { MaterialsList } from './components/MaterialsList';
 import { processImage } from './utils/imageProcessor';
+import { MATERIAL_FILTERS } from './utils/colors';
 import { ProcessResult, ProcessSettings } from './types';
 import { Map, Settings2, X, FolderOpen, ChevronDown, RotateCcw } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export default function App() {
   const [settings, setSettings] = useState<ProcessSettings>({
     gridX: 1,
     gridY: 1,
+    materials: 'carpet',
     dithering: 'floyd-steinberg',
     colorMetric: 'cielab',
     saturation: 0,
@@ -131,15 +133,29 @@ export default function App() {
                  </div>
                  
                  <div className="space-y-5">
-                   <div>
-                     <label className="block text-sm font-medium text-slate-200 mb-1">Name</label>
-                     <input 
-                       type="text" 
-                       value={imageName} 
-                       onChange={(e) => setImageName(e.target.value)} 
-                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
-                       placeholder="Enter project name..."
-                     />
+                   <div className="flex gap-3">
+                     <div className="flex-1">
+                       <label className="block text-sm font-medium text-slate-200 mb-1">Name</label>
+                       <input
+                         type="text"
+                         value={imageName}
+                         onChange={(e) => setImageName(e.target.value)}
+                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
+                         placeholder="Enter project name..."
+                       />
+                     </div>
+                     <div className="flex-1">
+                       <label className="block text-sm font-medium text-slate-200 mb-1">Materials</label>
+                       <select
+                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
+                         value={settings.materials}
+                         onChange={(e) => updateSetting('materials', e.target.value)}
+                       >
+                         {MATERIAL_FILTERS.map(f => (
+                           <option key={f.value} value={f.value}>{f.label}</option>
+                         ))}
+                       </select>
+                     </div>
                    </div>
 
                    <div>
@@ -248,7 +264,7 @@ export default function App() {
                      <br /><br />
                      <strong>X</strong> represents the horizontal position (width) and <strong>Y</strong> represents the vertical position (height). The coordinates are 0-indexed, with <code className="text-emerald-400 bg-slate-950 px-1 py-0.5 rounded font-mono">(0, 0)</code> located at the top-left corner of the map.
                      <br /><br />
-                     Each individual map represents exactly a 128x128 block area. For multi-map setups, a separate <code className="text-slate-300 bg-slate-950 px-1 py-0.5 rounded font-mono">&lt;name&gt;_&lt;x&gt;-&lt;y&gt;.json</code> file is generated for each map piece in the grid.
+                     Each individual map represents exactly a 128×128 block area. For multi-map setups, a separate <code className="text-slate-300 bg-slate-950 px-1 py-0.5 rounded font-mono">&lt;name&gt;_&lt;x&gt;-&lt;y&gt;.json</code> file is generated for each map piece in the grid.
                    </p>
                  </div>
                </>

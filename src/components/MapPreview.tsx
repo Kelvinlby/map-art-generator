@@ -63,8 +63,7 @@ export function MapPreview({ result, isProcessing, fileName }: Props) {
       for (let x = 0; x < mapSize; x++) {
         const globalX = startX + x;
         const globalY = startY + y;
-        const blockId = result!.blocks[globalY * result!.width + globalX];
-        json[`(${x}, ${y})`] = `minecraft:${blockId}_carpet`;
+        json[`(${x}, ${y})`] = result!.blocks[globalY * result!.width + globalX];
       }
     }
     return json;
@@ -98,7 +97,7 @@ export function MapPreview({ result, isProcessing, fileName }: Props) {
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <h2 className="text-slate-100 font-medium flex items-center gap-2">
            <Grid className="w-5 h-5 text-emerald-500" />
-           {result ? `${result.gridX}x${result.gridY} Map Group` : 'Map Preview'}
+           {result ? `${result.gridX}×${result.gridY} Map Group` : 'Map Preview'}
         </h2>
         {result && (
           <div className="flex items-center gap-2">
@@ -162,7 +161,7 @@ export function MapPreview({ result, isProcessing, fileName }: Props) {
 
       {result && (
         <div className="text-center text-xs text-slate-500 font-mono">
-          Final dimensions: {result.width}x{result.height} blocks ({result.gridX * result.gridY} maps total)
+          Final dimensions: {result.width}×{result.height} blocks ({result.gridX * result.gridY} maps total)
         </div>
       )}
     </div>
