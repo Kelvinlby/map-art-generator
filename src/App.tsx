@@ -265,6 +265,8 @@ export default function App() {
                      <strong>X</strong> represents the horizontal position (width) and <strong>Y</strong> represents the vertical position (height). The coordinates are 0-indexed, with <code className="text-emerald-400 bg-slate-950 px-1 py-0.5 rounded font-mono">(0, 0)</code> located at the top-left corner of the map.
                      <br /><br />
                      Each individual map represents exactly a 128×128 block area. For multi-map setups, a separate <code className="text-slate-300 bg-slate-950 px-1 py-0.5 rounded font-mono">&lt;name&gt;_&lt;x&gt;-&lt;y&gt;.json</code> file is generated for each map piece in the grid.
+                     <br /><br />
+                     <strong>NBT</strong> exports a vanilla Minecraft structure file. In Carpet mode it includes a <code className="text-slate-300 bg-slate-950 px-1 py-0.5 rounded font-mono">minecraft:cobblestone</code> support layer beneath the carpets. Each 128×128 file exceeds the Structure Block's 48×48 cap, so load it with <code className="text-slate-300 bg-slate-950 px-1 py-0.5 rounded font-mono">/place template &lt;name&gt;</code> after placing the file under <code className="text-slate-300 bg-slate-950 px-1 py-0.5 rounded font-mono">&lt;save&gt;/generated/minecraft/structures/</code>.
                    </p>
                  </div>
                </>
@@ -273,7 +275,7 @@ export default function App() {
 
           {/* Assembly Outputs */}
           <div className="lg:col-span-7 flex flex-col space-y-6">
-            <MapPreview result={result} isProcessing={isProcessing} fileName={imageName} />
+            <MapPreview result={result} isProcessing={isProcessing} fileName={imageName} materials={settings.materials} />
             <MaterialsList materials={result?.materials} />
           </div>
         </main>

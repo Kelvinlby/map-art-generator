@@ -3,9 +3,9 @@ import { CarpetColor } from '../types';
 // Each row is the "Shade 1" flat-surface RGB of a Minecraft map base color,
 // computed as floor(baseRGB * 220 / 255) — how blocks at standard flat
 // elevation render on a 128x128 map. Source: Minecraft Wiki (Map § Base colors).
-// Excludes air (NONE), fire (FIRE), and water (WATER) — they aren't useful
-// build materials. The Carpet/Full Block filter in MATERIAL_FILTERS selects
-// which subset the matching algorithm sees.
+// Excludes air (NONE) only. WATER is included via `minecraft:water` and
+// classified as non-solid in MATERIAL_FILTERS; the "Full Block" mode opts
+// into it, "Full Solid Block" excludes it.
 export const CARPET_PALETTE: CarpetColor[] = [
   // Carpets (shade-220 of the 16 colored base colors + SNOW)
   { name: 'White Carpet',      item: 'minecraft:white_carpet',      base: [220, 220, 220], hex: '#dcdcdc' },
@@ -50,6 +50,8 @@ export const CARPET_PALETTE: CarpetColor[] = [
   { name: 'Ice',            item: 'minecraft:ice',            base: [138, 138, 220], hex: '#8a8adc' },
   { name: 'Iron Block',     item: 'minecraft:iron_block',     base: [144, 144, 144], hex: '#909090' },
   { name: 'Oak Leaves',     item: 'minecraft:oak_leaves',     base: [0, 106, 0],     hex: '#006a00' },
+  { name: 'Redstone Block', item: 'minecraft:redstone_block', base: [220, 0, 0],     hex: '#dc0000' },
+  { name: 'Water',          item: 'minecraft:water',          base: [55, 55, 220],   hex: '#3737dc' },
   { name: 'Clay',           item: 'minecraft:clay',           base: [141, 144, 158], hex: '#8d909e' },
   { name: 'Dirt',           item: 'minecraft:dirt',           base: [130, 94, 66],   hex: '#825e42' },
   { name: 'Stone',          item: 'minecraft:stone',          base: [96, 96, 96],    hex: '#606060' },
@@ -93,13 +95,16 @@ export const CARPET_PALETTE: CarpetColor[] = [
   { name: 'Glow Lichen',       item: 'minecraft:glow_lichen',       base: [109, 144, 129], hex: '#6d9081' },
 ];
 
-export type MaterialFilterValue = 'carpet' | 'full_block';
+export type MaterialFilterValue = 'carpet' | 'full_solid_block' | 'full_block';
+
+const NON_SOLID_ITEMS = new Set<string>(['minecraft:water']);
 
 export const MATERIAL_FILTERS: {
   value: MaterialFilterValue;
   label: string;
   predicate: (item: string) => boolean;
 }[] = [
-  { value: 'carpet',     label: 'Carpet',     predicate: (item) => item.endsWith('_carpet') },
-  { value: 'full_block', label: 'Full Block', predicate: (item) => !item.endsWith('_carpet') },
+  { value: 'carpet',           label: 'Carpet',           predicate: (item) => item.endsWith('_carpet') },
+  { value: 'full_solid_block', label: 'Full Solid Block', predicate: (item) => !item.endsWith('_carpet') && !NON_SOLID_ITEMS.has(item) },
+  { value: 'full_block',       label: 'Full Block',       predicate: (item) => !item.endsWith('_carpet') },
 ];

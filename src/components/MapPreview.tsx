@@ -1,16 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { ProcessResult } from '../types';
-import { Loader2, Download, Grid, Image as ImageIcon } from 'lucide-react';
+import { Loader2, FileJson, Grid, Image as ImageIcon, Boxes } from 'lucide-react';
 import JSZip from 'jszip';
 import { pixelsToDataURL } from '../utils/imageProcessor';
+import { generateStructureNbt } from '../utils/nbtExporter';
+import type { MaterialFilterValue } from '../utils/colors';
 
 interface Props {
   result: ProcessResult | null;
   isProcessing: boolean;
   fileName: string;
+  materials: MaterialFilterValue;
 }
 
-export function MapPreview({ result, isProcessing, fileName }: Props) {
+export function MapPreview({ result, isProcessing, fileName, materials }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -50,6 +53,38 @@ export function MapPreview({ result, isProcessing, fileName }: Props) {
       }
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadFile(`${fileName}_schematics.zip`, blob, 'application/zip');
+    }
+  };
+
+  const handleDownloadNbt = async () => {
+    if (!result) return;
+    const mapSize = 128;
+
+    const buildOne = (mapX: number, mapY: number) => {
+      const startX = mapX * mapSize;
+      const startY = mapY * mapSize;
+      const tile: string[] = new Array(mapSize * mapSize);
+      for (let y = 0; y < mapSize; y++) {
+        for (let x = 0; x < mapSize; x++) {
+          tile[y * mapSize + x] = result.blocks[(startY + y) * result.width + (startX + x)];
+        }
+      }
+      return generateStructureNbt(tile, mapSize, mapSize, materials);
+    };
+
+    if (result.gridX === 1 && result.gridY === 1) {
+      const nbt = await buildOne(0, 0);
+      downloadFile(`${fileName}.nbt`, new Blob([nbt as BlobPart], { type: 'application/octet-stream' }), 'application/octet-stream');
+    } else {
+      const zip = new JSZip();
+      for (let mapY = 0; mapY < result.gridY; mapY++) {
+        for (let mapX = 0; mapX < result.gridX; mapX++) {
+          const nbt = await buildOne(mapX, mapY);
+          zip.file(`${fileName}_${mapX}-${mapY}.nbt`, nbt);
+        }
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      downloadFile(`${fileName}_nbt.zip`, blob, 'application/zip');
     }
   };
 
@@ -112,8 +147,15 @@ export function MapPreview({ result, isProcessing, fileName }: Props) {
               onClick={handleDownloadSchematics}
               className="flex items-center space-x-2 text-xs font-medium text-slate-900 bg-emerald-500 hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-3 py-1.5 rounded-lg transition-all"
             >
-              <Download className="w-4 h-4" />
-              <span>Schematics</span>
+              <FileJson className="w-4 h-4" />
+              <span>JSON</span>
+            </button>
+            <button
+              onClick={handleDownloadNbt}
+              className="flex items-center space-x-2 text-xs font-medium text-slate-900 bg-emerald-500 hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-3 py-1.5 rounded-lg transition-all"
+            >
+              <Boxes className="w-4 h-4" />
+              <span>NBT</span>
             </button>
           </div>
         )}
