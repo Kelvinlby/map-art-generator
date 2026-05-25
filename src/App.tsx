@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { UploadArea } from './components/UploadArea';
 import { MapPreview } from './components/MapPreview';
 import { MaterialsList } from './components/MaterialsList';
+import { ColorHslPanel } from './components/ColorHslPanel';
 import { processImage } from './utils/imageProcessor';
 import { MATERIAL_FILTERS } from './utils/colors';
-import { ProcessResult, ProcessSettings } from './types';
+import { DEFAULT_COLOR_HSL } from './utils/colorBands';
+import { ColorBandAdjust, ColorBandKey, ProcessResult, ProcessSettings } from './types';
 import { Map, Settings2, X, FolderOpen, ChevronDown, RotateCcw } from 'lucide-react';
 
 const Slider = ({ label, settingKey, min = -100, max = 100, unit = '', value, onChange, defaultValue = 0 }: any) => {
@@ -57,10 +59,29 @@ export default function App() {
     highlights: 0,
     shadows: 0,
     temperature: 0,
+    colorHsl: DEFAULT_COLOR_HSL,
   });
 
   const updateSetting = (key: keyof ProcessSettings, value: any) => {
     setSettings(s => ({ ...s, [key]: value }));
+  };
+
+  const updateColorHsl = (band: ColorBandKey, channel: keyof ColorBandAdjust, value: number) => {
+    setSettings(s => ({
+      ...s,
+      colorHsl: { ...s.colorHsl, [band]: { ...s.colorHsl[band], [channel]: value } },
+    }));
+  };
+
+  const resetColorBand = (band: ColorBandKey) => {
+    setSettings(s => ({
+      ...s,
+      colorHsl: { ...s.colorHsl, [band]: { h: 0, s: 0, l: 0 } },
+    }));
+  };
+
+  const resetAllColorHsl = () => {
+    setSettings(s => ({ ...s, colorHsl: DEFAULT_COLOR_HSL }));
   };
 
   useEffect(() => {
@@ -94,7 +115,7 @@ export default function App() {
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => e.preventDefault()}
     >
-      <div className="max-w-[1600px] mx-auto space-y-8">
+      <div className="w-full space-y-8">
         
         <header className="flex items-center space-x-4 border-b border-slate-800 pb-6">
           <div className="p-3 bg-slate-900 rounded-xl border border-slate-700 shadow-sm">
@@ -108,7 +129,7 @@ export default function App() {
 
         <main className="grid lg:grid-cols-12 gap-8">
           {/* Controls & Original Image */}
-          <div className="lg:col-span-5 flex flex-col space-y-6">
+          <div className="lg:col-span-3 flex flex-col space-y-6">
              {!imageSrc ? (
                <UploadArea 
                   currentImage={imageSrc} 
@@ -273,8 +294,20 @@ export default function App() {
              )}
           </div>
 
+          {/* Color HSL Adjustments */}
+          <div className="lg:col-span-3 flex flex-col space-y-6">
+            {imageSrc && (
+              <ColorHslPanel
+                value={settings.colorHsl}
+                onChange={updateColorHsl}
+                onResetBand={resetColorBand}
+                onResetAll={resetAllColorHsl}
+              />
+            )}
+          </div>
+
           {/* Assembly Outputs */}
-          <div className="lg:col-span-7 flex flex-col space-y-6">
+          <div className="lg:col-span-6 flex flex-col space-y-6">
             <MapPreview result={result} isProcessing={isProcessing} fileName={imageName} materials={settings.materials} />
             <MaterialsList materials={result?.materials} />
           </div>

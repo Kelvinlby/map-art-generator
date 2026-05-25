@@ -1,6 +1,40 @@
 /// <reference lib="webworker" />
 import { CARPET_PALETTE, MATERIAL_FILTERS } from './colors';
+import { COLOR_BANDS } from './colorBands';
 import { ProcessSettings } from '../types';
+
+function rgb2hsl(r: number, g: number, b: number): [number, number, number] {
+  const r_ = r / 255, g_ = g / 255, b_ = b / 255;
+  const max = Math.max(r_, g_, b_), min = Math.min(r_, g_, b_);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h: number;
+  if (max === r_) h = ((g_ - b_) / d + (g_ < b_ ? 6 : 0));
+  else if (max === g_) h = (b_ - r_) / d + 2;
+  else h = (r_ - g_) / d + 4;
+  return [h * 60, s, l];
+}
+
+function hsl2rgb(h: number, s: number, l: number): [number, number, number] {
+  if (s === 0) {
+    const v = l * 255;
+    return [v, v, v];
+  }
+  const hp = ((h % 360) + 360) % 360 / 60;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r1 = 0, g1 = 0, b1 = 0;
+  if (hp < 1) { r1 = c; g1 = x; }
+  else if (hp < 2) { r1 = x; g1 = c; }
+  else if (hp < 3) { g1 = c; b1 = x; }
+  else if (hp < 4) { g1 = x; b1 = c; }
+  else if (hp < 5) { r1 = x; b1 = c; }
+  else { r1 = c; b1 = x; }
+  const m = l - c / 2;
+  return [(r1 + m) * 255, (g1 + m) * 255, (b1 + m) * 255];
+}
 
 function rgb2lab(r: number, g: number, b: number): [number, number, number] {
   let r_ = r / 255, g_ = g / 255, b_ = b / 255;
@@ -99,6 +133,80 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
     data[i] = Math.min(255, Math.max(0, r));
     data[i + 1] = Math.min(255, Math.max(0, g));
     data[i + 2] = Math.min(255, Math.max(0, b));
+  }
+
+  if (jobId !== currentJobId) return;
+
+  const colorHsl = settings.colorHsl;
+  const bandsActive = colorHsl
+    ? COLOR_BANDS.some(b => {
+        const a = colorHsl[b.key];
+        return a && (a.h !== 0 || a.s !== 0 || a.l !== 0);
+      })
+    : false;
+
+  if (bandsActive) {
+    const N = COLOR_BANDS.length;
+    const centers = new Float32Array(N);
+    const adjH = new Float32Array(N);
+    const adjS = new Float32Array(N);
+    const adjL = new Float32Array(N);
+    for (let k = 0; k < N; k++) {
+      const band = COLOR_BANDS[k];
+      const a = colorHsl[band.key];
+      centers[k] = band.hueDeg;
+      adjH[k] = a.h;
+      adjS[k] = a.s;
+      adjL[k] = a.l;
+    }
+    const SIGMA = 30;
+    const INV_2SIGMA2 = 1 / (2 * SIGMA * SIGMA);
+    const HUE_RANGE_DEG = 60; // slider ±100 maps to ±60°
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const [h, s, l] = rgb2hsl(r, g, b);
+
+      // Skip near-gray pixels: hue is unstable and per-color adjustments
+      // should not affect achromatic regions.
+      if (s < 0.04) continue;
+
+      let wSum = 0, dh = 0, ds = 0, dl = 0;
+      for (let k = 0; k < N; k++) {
+        let d = Math.abs(h - centers[k]);
+        if (d > 180) d = 360 - d;
+        const w = Math.exp(-(d * d) * INV_2SIGMA2);
+        wSum += w;
+        dh += w * adjH[k];
+        ds += w * adjS[k];
+        dl += w * adjL[k];
+      }
+      if (wSum > 0) {
+        dh /= wSum; ds /= wSum; dl /= wSum;
+      }
+
+      // Saturation weighting: gray pixels (low s) get less effect, so the
+      // adjustment fades to zero smoothly as colors desaturate.
+      const satWeight = Math.min(1, s / 0.25);
+      dh *= satWeight; ds *= satWeight; dl *= satWeight;
+
+      const newH = h + (dh / 100) * HUE_RANGE_DEG;
+
+      let newS: number;
+      if (ds >= 0) newS = s + (1 - s) * (ds / 100);
+      else newS = s * (1 + ds / 100);
+      if (newS < 0) newS = 0; else if (newS > 1) newS = 1;
+
+      let newL: number;
+      if (dl >= 0) newL = l + (1 - l) * (dl / 100);
+      else newL = l * (1 + dl / 100);
+      if (newL < 0) newL = 0; else if (newL > 1) newL = 1;
+
+      const [nr, ng, nb] = hsl2rgb(newH, newS, newL);
+      data[i]     = Math.min(255, Math.max(0, nr));
+      data[i + 1] = Math.min(255, Math.max(0, ng));
+      data[i + 2] = Math.min(255, Math.max(0, nb));
+    }
   }
 
   if (jobId !== currentJobId) return;

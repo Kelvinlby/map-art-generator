@@ -9,6 +9,24 @@ export interface CarpetColor extends BlockColor {}
 
 import type { MaterialFilterValue } from './utils/colors';
 
+export type ColorBandKey =
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'cyan'
+  | 'blue'
+  | 'purple'
+  | 'magenta';
+
+export interface ColorBandAdjust {
+  h: number; // -100..100, mapped to ±60° hue rotation
+  s: number; // -100..100, multiplicative saturation
+  l: number; // -100..100, multiplicative lightness
+}
+
+export type ColorHslSettings = Record<ColorBandKey, ColorBandAdjust>;
+
 export interface ProcessSettings {
   gridX: number;
   gridY: number;
@@ -23,6 +41,7 @@ export interface ProcessSettings {
   highlights: number;
   shadows: number;
   temperature: number;
+  colorHsl: ColorHslSettings;
 }
 
 export interface ProcessResult {
