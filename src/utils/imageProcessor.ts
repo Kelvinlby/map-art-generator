@@ -16,7 +16,8 @@ function getWorker(): Worker {
     entry.resolve({
       pixels: new Uint8ClampedArray(msg.pixels),
       materials: msg.materials,
-      blocks: msg.blocks,
+      blocks: new Uint16Array(msg.blocks),
+      palette: msg.palette,
       width: msg.width,
       height: msg.height,
       gridX: entry.gridX,
@@ -61,12 +62,6 @@ export async function processImage(
   const targetWidth = mapSize * settings.gridX;
   const targetHeight = mapSize * settings.gridY;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('No 2D context');
-
   const targetAspect = targetWidth / targetHeight;
   const imgAspect = img.width / img.height;
   let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
@@ -82,13 +77,46 @@ export async function processImage(
   const filterContrast = 100 + (settings.contrast || 0);
   const filterHue = settings.hue || 0;
   const filterBrightness = 100 + (settings.exposure || 0);
+  const filterStr = `hue-rotate(${filterHue}deg) saturate(${filterSaturation}%) contrast(${filterContrast}%) brightness(${filterBrightness}%)`;
 
-  ctx.filter = `hue-rotate(${filterHue}deg) saturate(${filterSaturation}%) contrast(${filterContrast}%) brightness(${filterBrightness}%)`;
-  ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
-  ctx.filter = 'none';
+  // Allocate the full pixel buffer directly as a typed array. Going through a
+  // single targetWidth×targetHeight canvas blows past browser ImageData limits
+  // for large grids (~12.8k×12.8k = 655 MB), failing with RangeError. Instead
+  // we draw the image one map-tile at a time into a tiny reusable 128×128
+  // staging canvas and copy each tile's pixels into the full buffer.
+  const totalPixels = targetWidth * targetHeight;
+  const fullPixels = new Uint8ClampedArray(totalPixels * 4);
 
-  const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-  const pixelsBuf = imageData.data.buffer;
+  const tile = document.createElement('canvas');
+  tile.width = mapSize;
+  tile.height = mapSize;
+  const tileCtx = tile.getContext('2d', { willReadFrequently: true });
+  if (!tileCtx) throw new Error('No 2D context');
+  tileCtx.filter = filterStr;
+
+  const srcTileW = sWidth / settings.gridX;
+  const srcTileH = sHeight / settings.gridY;
+
+  for (let my = 0; my < settings.gridY; my++) {
+    for (let mx = 0; mx < settings.gridX; mx++) {
+      tileCtx.clearRect(0, 0, mapSize, mapSize);
+      tileCtx.drawImage(
+        img,
+        sx + mx * srcTileW, sy + my * srcTileH, srcTileW, srcTileH,
+        0, 0, mapSize, mapSize,
+      );
+      const tileData = tileCtx.getImageData(0, 0, mapSize, mapSize).data;
+      const dstX = mx * mapSize;
+      const dstY = my * mapSize;
+      for (let row = 0; row < mapSize; row++) {
+        const srcOff = row * mapSize * 4;
+        const dstOff = ((dstY + row) * targetWidth + dstX) * 4;
+        fullPixels.set(tileData.subarray(srcOff, srcOff + mapSize * 4), dstOff);
+      }
+    }
+  }
+
+  const pixelsBuf = fullPixels.buffer;
 
   cancelPendingJobs();
   const w = getWorker();
@@ -110,6 +138,11 @@ export async function processImage(
   });
 }
 
+// Browser canvases cap out well below 16k×16k for ImageData / toDataURL. If
+// dimensions exceed the safe threshold the caller must use pixelsToTilePngs
+// to assemble a ZIP of per-tile PNGs instead.
+export const MAX_SINGLE_PNG_DIM = 8192;
+
 export function pixelsToDataURL(pixels: Uint8ClampedArray, width: number, height: number): string {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -119,4 +152,39 @@ export function pixelsToDataURL(pixels: Uint8ClampedArray, width: number, height
   const imgData = new ImageData(new Uint8ClampedArray(pixels), width, height);
   ctx.putImageData(imgData, 0, 0);
   return canvas.toDataURL('image/png');
+}
+
+export async function pixelsToTileBlobs(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  gridX: number,
+  gridY: number,
+): Promise<{ mapX: number; mapY: number; blob: Blob }[]> {
+  const mapSize = 128;
+  const tile = document.createElement('canvas');
+  tile.width = mapSize;
+  tile.height = mapSize;
+  const ctx = tile.getContext('2d');
+  if (!ctx) return [];
+
+  const out: { mapX: number; mapY: number; blob: Blob }[] = [];
+  for (let my = 0; my < gridY; my++) {
+    for (let mx = 0; mx < gridX; mx++) {
+      const tileData = ctx.createImageData(mapSize, mapSize);
+      const startX = mx * mapSize;
+      const startY = my * mapSize;
+      for (let row = 0; row < mapSize; row++) {
+        const srcOff = ((startY + row) * width + startX) * 4;
+        const dstOff = row * mapSize * 4;
+        tileData.data.set(pixels.subarray(srcOff, srcOff + mapSize * 4), dstOff);
+      }
+      ctx.putImageData(tileData, 0, 0);
+      const blob: Blob = await new Promise(resolve =>
+        tile.toBlob(b => resolve(b!), 'image/png'),
+      );
+      out.push({ mapX: mx, mapY: my, blob });
+    }
+  }
+  return out;
 }

@@ -1,0 +1,452 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - img [ref=e7]
+    - generic [ref=e9]:
+      - heading "Minecraft Map Art Generator" [level=1] [ref=e10]
+      - paragraph [ref=e11]: Convert any image into a carpet building schematic with multi-map and lossless support.
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - img [ref=e35]
+            - heading "Project" [level=2] [ref=e37]
+          - button "Remove Image" [ref=e38]:
+            - img [ref=e39]
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e45]: Name
+              - textbox "Enter project name..." [ref=e46]: test_mapart
+            - generic [ref=e47]:
+              - generic [ref=e48]: Materials
+              - combobox [ref=e49]:
+                - option "Carpet" [selected]
+                - option "Full Solid Block"
+                - option "Full Block"
+          - generic [ref=e50]:
+            - generic [ref=e51]: Grid Dimensions (Maps)
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - spinbutton [ref=e54]: "1"
+                - generic: Maps Wide
+              - generic [ref=e55]: x
+              - generic [ref=e56]:
+                - spinbutton [ref=e57]: "1"
+                - generic: Maps Tall
+          - button "Advanced Settings" [ref=e58]:
+            - generic [ref=e59]: Advanced Settings
+            - img [ref=e60]
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - img [ref=e64]
+          - heading "Image Adjustments" [level=2] [ref=e67]
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: Exposure
+              - generic [ref=e72]:
+                - generic [ref=e73]: "0"
+                - button "Reset Exposure" [disabled] [ref=e74]:
+                  - img [ref=e75]
+            - slider [ref=e78] [cursor=pointer]: "0"
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: Contrast
+              - generic [ref=e82]:
+                - generic [ref=e83]: "0"
+                - button "Reset Contrast" [disabled] [ref=e84]:
+                  - img [ref=e85]
+            - slider [ref=e88] [cursor=pointer]: "0"
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - generic [ref=e91]: Highlights
+              - generic [ref=e92]:
+                - generic [ref=e93]: "0"
+                - button "Reset Highlights" [disabled] [ref=e94]:
+                  - img [ref=e95]
+            - slider [ref=e98] [cursor=pointer]: "0"
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - generic [ref=e101]: Shadows
+              - generic [ref=e102]:
+                - generic [ref=e103]: "0"
+                - button "Reset Shadows" [disabled] [ref=e104]:
+                  - img [ref=e105]
+            - slider [ref=e108] [cursor=pointer]: "0"
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e111]: Saturation
+              - generic [ref=e112]:
+                - generic [ref=e113]: "0"
+                - button "Reset Saturation" [disabled] [ref=e114]:
+                  - img [ref=e115]
+            - slider [ref=e118] [cursor=pointer]: "0"
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - generic [ref=e121]: Temperature
+              - generic [ref=e122]:
+                - generic [ref=e123]: "0"
+                - button "Reset Temperature" [disabled] [ref=e124]:
+                  - img [ref=e125]
+            - slider [ref=e128] [cursor=pointer]: "0"
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - generic [ref=e131]: Hue
+              - generic [ref=e132]:
+                - generic [ref=e133]: 0°
+                - button "Reset Hue" [disabled] [ref=e134]:
+                  - img [ref=e135]
+            - slider [ref=e138] [cursor=pointer]: "0"
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - generic [ref=e141]: Sharpness
+              - generic [ref=e142]:
+                - generic [ref=e143]: "0"
+                - button "Reset Sharpness" [disabled] [ref=e144]:
+                  - img [ref=e145]
+            - slider [ref=e148] [cursor=pointer]: "0"
+      - generic [ref=e149]:
+        - heading "About Schematics" [level=3] [ref=e150]
+        - paragraph [ref=e151]:
+          - text: Schematics are exported as JSON files mapping
+          - code [ref=e152]: (x, y)
+          - text: coordinates to Minecraft block IDs.
+          - strong [ref=e153]: X
+          - text: represents the horizontal position (width) and
+          - strong [ref=e154]: "Y"
+          - text: represents the vertical position (height). The coordinates are 0-indexed, with
+          - code [ref=e155]: (0, 0)
+          - text: located at the top-left corner of the map.
+          - text: Each individual map represents exactly a 128×128 block area. For multi-map setups, a separate
+          - code [ref=e156]: <name>_<x>-<y>.json
+          - text: file is generated for each map piece in the grid.
+          - strong [ref=e157]: NBT
+          - text: exports a vanilla Minecraft structure file. In Carpet mode it includes a
+          - code [ref=e158]: minecraft:cobblestone
+          - text: support layer beneath the carpets. Each 128×128 file exceeds the Structure Block's 48×48 cap, so load it with
+          - code [ref=e159]: /place template <name>
+          - text: after placing the file under
+          - code [ref=e160]: <save>/generated/minecraft/structures/
+          - text: .
+    - generic [ref=e161]:
+      - generic [ref=e162]:
+        - generic [ref=e163]:
+          - img [ref=e164]
+          - heading "Color HSL" [level=2] [ref=e170]
+        - button "Reset All" [disabled] [ref=e171]:
+          - img [ref=e172]
+          - text: Reset All
+      - generic [ref=e175]:
+        - generic [ref=e176]:
+          - generic [ref=e177]:
+            - generic [ref=e180]: Red
+            - button "Reset Red" [disabled] [ref=e181]:
+              - img [ref=e182]
+          - generic [ref=e185]:
+            - generic [ref=e186]:
+              - generic [ref=e187]: H
+              - slider [ref=e188] [cursor=pointer]: "0"
+              - generic [ref=e189]: "0"
+              - button "Reset H" [disabled] [ref=e190]:
+                - img [ref=e191]
+            - generic [ref=e194]:
+              - generic [ref=e195]: S
+              - slider [ref=e196] [cursor=pointer]: "0"
+              - generic [ref=e197]: "0"
+              - button "Reset S" [disabled] [ref=e198]:
+                - img [ref=e199]
+            - generic [ref=e202]:
+              - generic [ref=e203]: L
+              - slider [ref=e204] [cursor=pointer]: "0"
+              - generic [ref=e205]: "0"
+              - button "Reset L" [disabled] [ref=e206]:
+                - img [ref=e207]
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - generic [ref=e214]: Orange
+            - button "Reset Orange" [disabled] [ref=e215]:
+              - img [ref=e216]
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - generic [ref=e221]: H
+              - slider [ref=e222] [cursor=pointer]: "0"
+              - generic [ref=e223]: "0"
+              - button "Reset H" [disabled] [ref=e224]:
+                - img [ref=e225]
+            - generic [ref=e228]:
+              - generic [ref=e229]: S
+              - slider [ref=e230] [cursor=pointer]: "0"
+              - generic [ref=e231]: "0"
+              - button "Reset S" [disabled] [ref=e232]:
+                - img [ref=e233]
+            - generic [ref=e236]:
+              - generic [ref=e237]: L
+              - slider [ref=e238] [cursor=pointer]: "0"
+              - generic [ref=e239]: "0"
+              - button "Reset L" [disabled] [ref=e240]:
+                - img [ref=e241]
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - generic [ref=e248]: Yellow
+            - button "Reset Yellow" [disabled] [ref=e249]:
+              - img [ref=e250]
+          - generic [ref=e253]:
+            - generic [ref=e254]:
+              - generic [ref=e255]: H
+              - slider [ref=e256] [cursor=pointer]: "0"
+              - generic [ref=e257]: "0"
+              - button "Reset H" [disabled] [ref=e258]:
+                - img [ref=e259]
+            - generic [ref=e262]:
+              - generic [ref=e263]: S
+              - slider [ref=e264] [cursor=pointer]: "0"
+              - generic [ref=e265]: "0"
+              - button "Reset S" [disabled] [ref=e266]:
+                - img [ref=e267]
+            - generic [ref=e270]:
+              - generic [ref=e271]: L
+              - slider [ref=e272] [cursor=pointer]: "0"
+              - generic [ref=e273]: "0"
+              - button "Reset L" [disabled] [ref=e274]:
+                - img [ref=e275]
+        - generic [ref=e278]:
+          - generic [ref=e279]:
+            - generic [ref=e282]: Green
+            - button "Reset Green" [disabled] [ref=e283]:
+              - img [ref=e284]
+          - generic [ref=e287]:
+            - generic [ref=e288]:
+              - generic [ref=e289]: H
+              - slider [ref=e290] [cursor=pointer]: "0"
+              - generic [ref=e291]: "0"
+              - button "Reset H" [disabled] [ref=e292]:
+                - img [ref=e293]
+            - generic [ref=e296]:
+              - generic [ref=e297]: S
+              - slider [ref=e298] [cursor=pointer]: "0"
+              - generic [ref=e299]: "0"
+              - button "Reset S" [disabled] [ref=e300]:
+                - img [ref=e301]
+            - generic [ref=e304]:
+              - generic [ref=e305]: L
+              - slider [ref=e306] [cursor=pointer]: "0"
+              - generic [ref=e307]: "0"
+              - button "Reset L" [disabled] [ref=e308]:
+                - img [ref=e309]
+        - generic [ref=e312]:
+          - generic [ref=e313]:
+            - generic [ref=e316]: Cyan
+            - button "Reset Cyan" [disabled] [ref=e317]:
+              - img [ref=e318]
+          - generic [ref=e321]:
+            - generic [ref=e322]:
+              - generic [ref=e323]: H
+              - slider [ref=e324] [cursor=pointer]: "0"
+              - generic [ref=e325]: "0"
+              - button "Reset H" [disabled] [ref=e326]:
+                - img [ref=e327]
+            - generic [ref=e330]:
+              - generic [ref=e331]: S
+              - slider [ref=e332] [cursor=pointer]: "0"
+              - generic [ref=e333]: "0"
+              - button "Reset S" [disabled] [ref=e334]:
+                - img [ref=e335]
+            - generic [ref=e338]:
+              - generic [ref=e339]: L
+              - slider [ref=e340] [cursor=pointer]: "0"
+              - generic [ref=e341]: "0"
+              - button "Reset L" [disabled] [ref=e342]:
+                - img [ref=e343]
+        - generic [ref=e346]:
+          - generic [ref=e347]:
+            - generic [ref=e350]: Blue
+            - button "Reset Blue" [disabled] [ref=e351]:
+              - img [ref=e352]
+          - generic [ref=e355]:
+            - generic [ref=e356]:
+              - generic [ref=e357]: H
+              - slider [ref=e358] [cursor=pointer]: "0"
+              - generic [ref=e359]: "0"
+              - button "Reset H" [disabled] [ref=e360]:
+                - img [ref=e361]
+            - generic [ref=e364]:
+              - generic [ref=e365]: S
+              - slider [ref=e366] [cursor=pointer]: "0"
+              - generic [ref=e367]: "0"
+              - button "Reset S" [disabled] [ref=e368]:
+                - img [ref=e369]
+            - generic [ref=e372]:
+              - generic [ref=e373]: L
+              - slider [ref=e374] [cursor=pointer]: "0"
+              - generic [ref=e375]: "0"
+              - button "Reset L" [disabled] [ref=e376]:
+                - img [ref=e377]
+        - generic [ref=e380]:
+          - generic [ref=e381]:
+            - generic [ref=e384]: Purple
+            - button "Reset Purple" [disabled] [ref=e385]:
+              - img [ref=e386]
+          - generic [ref=e389]:
+            - generic [ref=e390]:
+              - generic [ref=e391]: H
+              - slider [ref=e392] [cursor=pointer]: "0"
+              - generic [ref=e393]: "0"
+              - button "Reset H" [disabled] [ref=e394]:
+                - img [ref=e395]
+            - generic [ref=e398]:
+              - generic [ref=e399]: S
+              - slider [ref=e400] [cursor=pointer]: "0"
+              - generic [ref=e401]: "0"
+              - button "Reset S" [disabled] [ref=e402]:
+                - img [ref=e403]
+            - generic [ref=e406]:
+              - generic [ref=e407]: L
+              - slider [ref=e408] [cursor=pointer]: "0"
+              - generic [ref=e409]: "0"
+              - button "Reset L" [disabled] [ref=e410]:
+                - img [ref=e411]
+        - generic [ref=e414]:
+          - generic [ref=e415]:
+            - generic [ref=e418]: Magenta
+            - button "Reset Magenta" [disabled] [ref=e419]:
+              - img [ref=e420]
+          - generic [ref=e423]:
+            - generic [ref=e424]:
+              - generic [ref=e425]: H
+              - slider [ref=e426] [cursor=pointer]: "0"
+              - generic [ref=e427]: "0"
+              - button "Reset H" [disabled] [ref=e428]:
+                - img [ref=e429]
+            - generic [ref=e432]:
+              - generic [ref=e433]: S
+              - slider [ref=e434] [cursor=pointer]: "0"
+              - generic [ref=e435]: "0"
+              - button "Reset S" [disabled] [ref=e436]:
+                - img [ref=e437]
+            - generic [ref=e440]:
+              - generic [ref=e441]: L
+              - slider [ref=e442] [cursor=pointer]: "0"
+              - generic [ref=e443]: "0"
+              - button "Reset L" [disabled] [ref=e444]:
+                - img [ref=e445]
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - heading "1×1 Map Group" [level=2] [ref=e448]:
+            - img [ref=e26]
+            - text: 1×1 Map Group
+          - generic [ref=e449]:
+            - button "Preview" [ref=e450]:
+              - img [ref=e451]
+              - generic [ref=e455]: Preview
+            - button "JSON" [ref=e456]:
+              - img [ref=e457]
+              - generic [ref=e462]: JSON
+            - button "NBT" [ref=e463]:
+              - img [ref=e464]
+              - generic [ref=e474]: NBT
+        - generic [ref=e477]: "Final dimensions: 128×128 blocks (1 maps total)"
+      - generic [ref=e478]:
+        - generic [ref=e479]:
+          - generic [ref=e480]:
+            - heading "Material Requirements" [level=2] [ref=e481]
+            - paragraph [ref=e482]: Carpet blocks needed to construct layout.
+          - generic [ref=e483]:
+            - generic [ref=e484]: 16,384
+            - generic [ref=e485]: Total Blocks
+        - generic [ref=e486]:
+          - generic [ref=e487]:
+            - generic [ref=e489]:
+              - generic [ref=e490]: White Carpet
+              - generic [ref=e491]: "4498"
+            - generic [ref=e492]:
+              - generic [ref=e493]: 70st
+              - text: "18"
+          - generic [ref=e494]:
+            - generic [ref=e496]:
+              - generic [ref=e497]: Pink Carpet
+              - generic [ref=e498]: "3272"
+            - generic [ref=e499]:
+              - generic [ref=e500]: 51st
+              - text: "8"
+          - generic [ref=e501]:
+            - generic [ref=e503]:
+              - generic [ref=e504]: Green Carpet
+              - generic [ref=e505]: "1616"
+            - generic [ref=e506]:
+              - generic [ref=e507]: 25st
+              - text: "16"
+          - generic [ref=e508]:
+            - generic [ref=e510]:
+              - generic [ref=e511]: Red Carpet
+              - generic [ref=e512]: "1352"
+            - generic [ref=e513]:
+              - generic [ref=e514]: 21st
+              - text: "8"
+          - generic [ref=e515]:
+            - generic [ref=e517]:
+              - generic [ref=e518]: Lime Carpet
+              - generic [ref=e519]: "1320"
+            - generic [ref=e520]:
+              - generic [ref=e521]: 20st
+              - text: "40"
+          - generic [ref=e522]:
+            - generic [ref=e524]:
+              - generic [ref=e525]: Black Carpet
+              - generic [ref=e526]: "1031"
+            - generic [ref=e527]:
+              - generic [ref=e528]: 16st
+              - text: "7"
+          - generic [ref=e529]:
+            - generic [ref=e531]:
+              - generic [ref=e532]: Gray Carpet
+              - generic [ref=e533]: "1022"
+            - generic [ref=e534]:
+              - generic [ref=e535]: 15st
+              - text: "62"
+          - generic [ref=e536]:
+            - generic [ref=e538]:
+              - generic [ref=e539]: Light Gray Carpet
+              - generic [ref=e540]: "914"
+            - generic [ref=e541]:
+              - generic [ref=e542]: 14st
+              - text: "18"
+          - generic [ref=e543]:
+            - generic [ref=e545]:
+              - generic [ref=e546]: Cyan Carpet
+              - generic [ref=e547]: "499"
+            - generic [ref=e548]:
+              - generic [ref=e549]: 7st
+              - text: "51"
+          - generic [ref=e550]:
+            - generic [ref=e552]:
+              - generic [ref=e553]: Purple Carpet
+              - generic [ref=e554]: "443"
+            - generic [ref=e555]:
+              - generic [ref=e556]: 6st
+              - text: "59"
+          - generic [ref=e557]:
+            - generic [ref=e559]:
+              - generic [ref=e560]: Magenta Carpet
+              - generic [ref=e561]: "260"
+            - generic [ref=e562]:
+              - generic [ref=e563]: 4st
+              - text: "4"
+          - generic [ref=e564]:
+            - generic [ref=e566]:
+              - generic [ref=e567]: Light Blue Carpet
+              - generic [ref=e568]: "97"
+            - generic [ref=e569]:
+              - generic [ref=e570]: 1st
+              - text: "33"
+          - generic [ref=e571]:
+            - generic [ref=e573]:
+              - generic [ref=e574]: Brown Carpet
+              - generic [ref=e575]: "33"
+            - generic [ref=e576]: "33"
+          - generic [ref=e577]:
+            - generic [ref=e579]:
+              - generic [ref=e580]: Blue Carpet
+              - generic [ref=e581]: "27"
+            - generic [ref=e582]: "27"

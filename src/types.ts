@@ -51,5 +51,9 @@ export interface ProcessResult {
   height: number;
   gridX: number;
   gridY: number;
-  blocks: string[];
+  // blocks[i] is an index into `palette` giving the Minecraft block id for
+  // pixel i. Using a typed array keeps the transfer payload small enough for
+  // structured-clone at large grid sizes (a string[] of 40M+ entries fails).
+  blocks: Uint16Array;
+  palette: string[];
 }

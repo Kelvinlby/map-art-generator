@@ -44,6 +44,7 @@ export default function App() {
   const [imageName, setImageName] = useState<string>('mapart');
   const [result, setResult] = useState<ProcessResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processError, setProcessError] = useState<string | null>(null);
   const [isProjectExpanded, setIsProjectExpanded] = useState(false);
   const [settings, setSettings] = useState<ProcessSettings>({
     gridX: 1,
@@ -91,6 +92,7 @@ export default function App() {
     }
     
     setIsProcessing(true);
+    setProcessError(null);
     let cancelled = false;
     // Small debounce coalesces rapid slider drags; the worker also
     // cancels any still-running prior job inside processImage.
@@ -102,7 +104,12 @@ export default function App() {
       };
       processImage(imageSrc, safeSettings)
         .then(res => { if (!cancelled) setResult(res); })
-        .catch(console.error)
+        .catch(e => {
+          if (cancelled) return;
+          console.error(e);
+          setProcessError(e?.message ?? String(e));
+          setResult(null);
+        })
         .finally(() => { if (!cancelled) setIsProcessing(false); });
     }, 60);
 
@@ -308,7 +315,7 @@ export default function App() {
 
           {/* Assembly Outputs */}
           <div className="lg:col-span-6 flex flex-col space-y-6">
-            <MapPreview result={result} isProcessing={isProcessing} fileName={imageName} materials={settings.materials} />
+            <MapPreview result={result} isProcessing={isProcessing} fileName={imageName} materials={settings.materials} error={processError} />
             <MaterialsList materials={result?.materials} />
           </div>
         </main>

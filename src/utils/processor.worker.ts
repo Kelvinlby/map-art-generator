@@ -234,11 +234,16 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
 
   const materials: Record<string, number> = {};
   activePalette.forEach(c => (materials[c.item] = 0));
-  const blocks: string[] = new Array(width * height);
+  // Store block assignments as palette indices in a typed array rather than
+  // a string[]. A Uint16Array of size width*height costs 2 bytes per cell and
+  // transfers cheaply; a string[] of the same length would either fail to
+  // allocate or fail to structured-clone on postMessage at large grids.
+  const blocks = new Uint16Array(width * height);
+  const palette = activePalette.map(c => c.item);
 
   const useLab = settings.colorMetric !== 'rgb';
 
-  const getClosestColor = (r: number, g: number, b: number) => {
+  const getClosestIdx = (r: number, g: number, b: number) => {
     let minDist = Infinity;
     let bestIdx = 0;
     let labCache: [number, number, number] | null = null;
@@ -257,7 +262,7 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
       }
       if (dist < minDist) { minDist = dist; bestIdx = i; }
     }
-    return activePalette[bestIdx];
+    return bestIdx;
   };
 
   const distributeError = (x: number, y: number, errR: number, errG: number, errB: number, factor: number) => {
@@ -273,10 +278,11 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
 
   if (settings.dithering === 'none') {
     for (let i = 0; i < data.length; i += 4) {
-      const closest = getClosestColor(data[i], data[i + 1], data[i + 2]);
+      const idx = getClosestIdx(data[i], data[i + 1], data[i + 2]);
+      const closest = activePalette[idx];
       data[i] = closest.base[0]; data[i + 1] = closest.base[1]; data[i + 2] = closest.base[2];
       materials[closest.item]++;
-      blocks[i / 4] = closest.item;
+      blocks[i / 4] = idx;
     }
   } else {
     for (let y = 0; y < height; y++) {
@@ -284,10 +290,11 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
       for (let x = 0; x < width; x++) {
         const i = (y * width + x) * 4;
         const r = data[i], g = data[i + 1], b = data[i + 2];
-        const closest = getClosestColor(r, g, b);
+        const idx = getClosestIdx(r, g, b);
+        const closest = activePalette[idx];
         data[i] = closest.base[0]; data[i + 1] = closest.base[1]; data[i + 2] = closest.base[2];
         materials[closest.item]++;
-        blocks[y * width + x] = closest.item;
+        blocks[y * width + x] = idx;
 
         const errR = r - closest.base[0];
         const errG = g - closest.base[1];
@@ -312,10 +319,11 @@ self.onmessage = (e: MessageEvent<Incoming>) => {
 
   if (jobId !== currentJobId) return;
 
-  const buf = data.buffer;
+  const pixelsBuf = data.buffer;
+  const blocksBuf = blocks.buffer;
   (self as unknown as Worker).postMessage(
-    { type: 'done', jobId, width, height, pixels: buf, blocks, materials },
-    [buf]
+    { type: 'done', jobId, width, height, pixels: pixelsBuf, blocks: blocksBuf, palette, materials },
+    [pixelsBuf, blocksBuf]
   );
 };
 

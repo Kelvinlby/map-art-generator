@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { ProcessResult } from '../types';
-import { Loader2, FileJson, Grid, Image as ImageIcon, Boxes } from 'lucide-react';
+import { Loader2, FileJson, Grid, Image as ImageIcon, Boxes, AlertTriangle } from 'lucide-react';
 import JSZip from 'jszip';
-import { pixelsToDataURL } from '../utils/imageProcessor';
+import { pixelsToDataURL, pixelsToTileBlobs, MAX_SINGLE_PNG_DIM } from '../utils/imageProcessor';
 import { generateStructureNbt } from '../utils/nbtExporter';
 import type { MaterialFilterValue } from '../utils/colors';
 
@@ -11,30 +11,76 @@ interface Props {
   isProcessing: boolean;
   fileName: string;
   materials: MaterialFilterValue;
+  error?: string | null;
 }
 
-export function MapPreview({ result, isProcessing, fileName, materials }: Props) {
+export function MapPreview({ result, isProcessing, fileName, materials, error }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     if (!result || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    canvas.width = result.width;
-    canvas.height = result.height;
+
+    // Cap the on-screen preview canvas. The full result can be 12.8k×12.8k+
+    // pixels, which exceeds browser canvas/ImageData limits and is also
+    // pointless for a viewport-sized preview. We downsample by an integer
+    // factor (so the pixelated look is preserved) into a small canvas.
+    const MAX_PREVIEW_DIM = 2048;
+    const scale = Math.max(
+      1,
+      Math.ceil(Math.max(result.width, result.height) / MAX_PREVIEW_DIM),
+    );
+    const previewW = Math.ceil(result.width / scale);
+    const previewH = Math.ceil(result.height / scale);
+    canvas.width = previewW;
+    canvas.height = previewH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const imgData = new ImageData(new Uint8ClampedArray(result.pixels), result.width, result.height);
-    ctx.putImageData(imgData, 0, 0);
+
+    if (scale === 1) {
+      const imgData = new ImageData(new Uint8ClampedArray(result.pixels), result.width, result.height);
+      ctx.putImageData(imgData, 0, 0);
+      return;
+    }
+
+    const out = ctx.createImageData(previewW, previewH);
+    const src = result.pixels;
+    const W = result.width;
+    for (let y = 0; y < previewH; y++) {
+      const sy = y * scale;
+      for (let x = 0; x < previewW; x++) {
+        const sx = x * scale;
+        const si = (sy * W + sx) * 4;
+        const di = (y * previewW + x) * 4;
+        out.data[di]     = src[si];
+        out.data[di + 1] = src[si + 1];
+        out.data[di + 2] = src[si + 2];
+        out.data[di + 3] = src[si + 3];
+      }
+    }
+    ctx.putImageData(out, 0, 0);
   }, [result]);
 
-  const handleDownloadPNG = () => {
+  const handleDownloadPNG = async () => {
     if (!result) return;
-    const url = pixelsToDataURL(result.pixels, result.width, result.height);
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName}_preview.png`;
-    a.click();
+    if (Math.max(result.width, result.height) <= MAX_SINGLE_PNG_DIM) {
+      const url = pixelsToDataURL(result.pixels, result.width, result.height);
+      if (!url) return;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}_preview.png`;
+      a.click();
+      return;
+    }
+    const tiles = await pixelsToTileBlobs(
+      result.pixels, result.width, result.height, result.gridX, result.gridY,
+    );
+    const zip = new JSZip();
+    for (const { mapX, mapY, blob } of tiles) {
+      zip.file(`${fileName}_${mapX}-${mapY}.png`, blob);
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    downloadFile(`${fileName}_preview.zip`, blob, 'application/zip');
   };
 
   const handleDownloadSchematics = async () => {
@@ -66,7 +112,7 @@ export function MapPreview({ result, isProcessing, fileName, materials }: Props)
       const tile: string[] = new Array(mapSize * mapSize);
       for (let y = 0; y < mapSize; y++) {
         for (let x = 0; x < mapSize; x++) {
-          tile[y * mapSize + x] = result.blocks[(startY + y) * result.width + (startX + x)];
+          tile[y * mapSize + x] = result.palette[result.blocks[(startY + y) * result.width + (startX + x)]];
         }
       }
       return generateStructureNbt(tile, mapSize, mapSize, materials);
@@ -98,7 +144,7 @@ export function MapPreview({ result, isProcessing, fileName, materials }: Props)
       for (let x = 0; x < mapSize; x++) {
         const globalX = startX + x;
         const globalY = startY + y;
-        json[`(${x}, ${y})`] = result!.blocks[globalY * result!.width + globalX];
+        json[`(${x}, ${y})`] = result!.palette[result!.blocks[globalY * result!.width + globalX]];
       }
     }
     return json;
@@ -193,10 +239,21 @@ export function MapPreview({ result, isProcessing, fileName, materials }: Props)
           </div>
         ) : (
           !isProcessing && (
-            <div className="text-slate-600 text-sm flex flex-col items-center space-y-3">
-              <div className="w-16 h-16 border-2 border-dashed border-slate-700 rounded-lg opacity-50"></div>
-              <span>Awaiting image input...</span>
-            </div>
+            error ? (
+              <div className="text-sm flex flex-col items-center space-y-3 max-w-md text-center px-4">
+                <AlertTriangle className="w-10 h-10 text-amber-400" />
+                <div className="text-slate-200 font-medium">Failed to generate map art</div>
+                <div className="text-slate-400 text-xs break-words">{error}</div>
+                <div className="text-slate-500 text-xs">
+                  This usually happens when the grid is very large and the browser can't allocate enough memory. Try reducing the grid dimensions.
+                </div>
+              </div>
+            ) : (
+              <div className="text-slate-600 text-sm flex flex-col items-center space-y-3">
+                <div className="w-16 h-16 border-2 border-dashed border-slate-700 rounded-lg opacity-50"></div>
+                <span>Awaiting image input...</span>
+              </div>
+            )
           )
         )}
       </div>
