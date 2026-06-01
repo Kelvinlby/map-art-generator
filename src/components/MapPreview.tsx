@@ -77,7 +77,7 @@ export function MapPreview({ result, isProcessing, fileName, materials, error }:
     );
     const zip = new JSZip();
     for (const { mapX, mapY, blob } of tiles) {
-      zip.file(`${fileName}_${mapX}-${mapY}.png`, blob);
+      zip.file(`${fileName}_${padCoord(mapX, result.gridX)}-${padCoord(mapY, result.gridY)}.png`, blob);
     }
     const blob = await zip.generateAsync({ type: 'blob' });
     downloadFile(`${fileName}_preview.zip`, blob, 'application/zip');
@@ -94,7 +94,7 @@ export function MapPreview({ result, isProcessing, fileName, materials, error }:
       for (let mapY = 0; mapY < result.gridY; mapY++) {
         for (let mapX = 0; mapX < result.gridX; mapX++) {
           const json = generateMapJson(mapX, mapY);
-          zip.file(`${fileName}_${mapX}-${mapY}.json`, JSON.stringify(json, null, 2));
+          zip.file(`${fileName}_${padCoord(mapX, result.gridX)}-${padCoord(mapY, result.gridY)}.json`, JSON.stringify(json, null, 2));
         }
       }
       const blob = await zip.generateAsync({ type: 'blob' });
@@ -126,13 +126,16 @@ export function MapPreview({ result, isProcessing, fileName, materials, error }:
       for (let mapY = 0; mapY < result.gridY; mapY++) {
         for (let mapX = 0; mapX < result.gridX; mapX++) {
           const nbt = await buildOne(mapX, mapY);
-          zip.file(`${fileName}_${mapX}-${mapY}.nbt`, nbt);
+          zip.file(`${fileName}_${padCoord(mapX, result.gridX)}-${padCoord(mapY, result.gridY)}.nbt`, nbt);
         }
       }
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadFile(`${fileName}_nbt.zip`, blob, 'application/zip');
     }
   };
+
+  const padCoord = (value: number, gridSize: number) =>
+    String(value).padStart(String(Math.max(gridSize - 1, 0)).length, '0');
 
   const generateMapJson = (mapX: number, mapY: number) => {
     const json: Record<string, string> = {};
